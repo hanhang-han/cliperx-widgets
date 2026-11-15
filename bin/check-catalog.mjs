@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
+import { isDeepStrictEqual } from 'node:util';
 import { assert, digest, validateEntry } from '../lib/protocol.mjs';
 
 const catalog = JSON.parse(await readFile(new URL('../registry/index.json', import.meta.url), 'utf8'));
@@ -21,7 +22,7 @@ for (const entry of catalog.widgets) {
     assert(digest(data) === entry.sha256, `Checksum mismatch: ${entry.manifest.id}`);
     const pkg = JSON.parse(data.toString('utf8'));
     assert(pkg.formatVersion === 1 && typeof pkg.script === 'string', 'Invalid package');
-    assert(JSON.stringify(validateEntry({ ...entry, manifest: pkg.manifest }).manifest) === JSON.stringify(entry.manifest), 'Manifest mismatch');
+    assert(isDeepStrictEqual(validateEntry({ ...entry, manifest: pkg.manifest }).manifest, entry.manifest), 'Manifest mismatch');
   }
   process.stdout.write(`Verified ${entry.manifest.id} v${entry.manifest.version}\n`);
 }
