@@ -1,4 +1,38 @@
 {
   "schemaVersion": 1,
-  "widgets": []
+  "widgets": [
+    {
+      "manifest": {
+        "id": "com.cliperx.focus-timer",
+        "name": "专注计时",
+        "version": "0.1.0",
+        "apiVersion": 1,
+        "author": "CliperX",
+        "description": "原生倒计时，点击开始、暂停或重置，可配置专注时长。",
+        "license": "MIT",
+        "symbol": "timer",
+        "sizes": [
+          "small",
+          "wide"
+        ],
+        "refreshSeconds": 10,
+        "permissions": {
+          "network": [],
+          "openURL": false,
+          "clipboardWrite": false,
+          "systemMetrics": false
+        },
+        "settings": [
+          {
+            "key": "minutes",
+            "title": "专注时长（分钟）",
+            "default": "25"
+          }
+        ]
+      },
+      "packageURL": "https://github.com/hanhang-han/cliperx-widgets/releases/download/com.cliperx.focus-timer-v0.1.0/com.cliperx.focus-timer-0.1.0.cliperxwidget",
+      "sha256": "408177602c1e6d0392231aee13449796970601a1247726d569d314b1bdd44e58",
+      "sourceURL": "https://github.com/hanhang-han/cliperx-widgets/tree/42fbb3c0af7a080ee38a048f762da1ff9fc73397/examples/focus-timer"
+    }
+  ]
 }
