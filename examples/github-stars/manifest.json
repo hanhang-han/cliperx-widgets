@@ -1,0 +1,18 @@
+{
+  "id": "com.cliperx.github-stars",
+  "name": "GitHub 仓库",
+  "version": "0.1.0",
+  "apiVersion": 1,
+  "author": "CliperX",
+  "description": "查看公开仓库 Star、Fork 和 Issue 数量，支持配置任意公开仓库。",
+  "license": "MIT",
+  "symbol": "star",
+  "sizes": ["wide", "small"],
+  "refreshSeconds": 300,
+  "permissions": { "network": ["api.github.com"], "openURL": true, "clipboardWrite": false, "systemMetrics": false },
+  "settings": [
+    { "key": "owner", "title": "仓库所有者", "default": "hanhang-han" },
+    { "key": "repository", "title": "仓库名称", "default": "cliperx-widgets" }
+  ],
+  "sources": { "repository": { "url": "https://api.github.com/repos/{{owner}}/{{repository}}" } }
+}

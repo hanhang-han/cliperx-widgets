@@ -1,0 +1,11 @@
+{
+  "name": "cliperx-widgets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "灵剪社区小组件开发工具与协议",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "bin": { "cliperx-widget": "bin/widget.mjs" },
+  "scripts": { "test": "node --test tests/*.test.mjs" }
+}
