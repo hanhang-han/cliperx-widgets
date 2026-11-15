@@ -33,6 +33,51 @@
       "packageURL": "https://github.com/hanhang-han/cliperx-widgets/releases/download/com.cliperx.focus-timer-v0.1.0/com.cliperx.focus-timer-0.1.0.cliperxwidget",
       "sha256": "408177602c1e6d0392231aee13449796970601a1247726d569d314b1bdd44e58",
       "sourceURL": "https://github.com/hanhang-han/cliperx-widgets/tree/42fbb3c0af7a080ee38a048f762da1ff9fc73397/examples/focus-timer"
+    },
+    {
+      "manifest": {
+        "id": "com.cliperx.github-stars",
+        "name": "GitHub 仓库",
+        "version": "0.1.0",
+        "apiVersion": 1,
+        "author": "CliperX",
+        "description": "查看公开仓库 Star、Fork 和 Issue 数量，支持配置任意公开仓库。",
+        "license": "MIT",
+        "symbol": "star",
+        "sizes": [
+          "wide",
+          "small"
+        ],
+        "refreshSeconds": 300,
+        "permissions": {
+          "network": [
+            "api.github.com"
+          ],
+          "openURL": true,
+          "clipboardWrite": false,
+          "systemMetrics": false
+        },
+        "settings": [
+          {
+            "key": "owner",
+            "title": "仓库所有者",
+            "default": "hanhang-han"
+          },
+          {
+            "key": "repository",
+            "title": "仓库名称",
+            "default": "cliperx-widgets"
+          }
+        ],
+        "sources": {
+          "repository": {
+            "url": "https://api.github.com/repos/{{owner}}/{{repository}}"
+          }
+        }
+      },
+      "packageURL": "https://github.com/hanhang-han/cliperx-widgets/releases/download/com.cliperx.github-stars-v0.1.0/com.cliperx.github-stars-0.1.0.cliperxwidget",
+      "sha256": "8e16d06de074dc5cfbb3c2e0fccc5bc57c75f517a11673a5bcb5588e496d60c0",
+      "sourceURL": "https://github.com/hanhang-han/cliperx-widgets/tree/42fbb3c0af7a080ee38a048f762da1ff9fc73397/examples/github-stars"
     }
   ]
 }
