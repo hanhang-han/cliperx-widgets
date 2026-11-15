@@ -84,7 +84,7 @@ async function publish() {
     const temp = await mkdtemp(path.join(os.tmpdir(), 'cliperx-widget-release-'));
     try {
       const notes = path.join(temp, 'notes.md');
-      await writeFile(notes, `${built.pkg.manifest.name} ${built.pkg.manifest.version}\n\nWidget API 1. Source commit ${sha}.\nSHA256 ${built.sha256}\n`);
+      await writeFile(notes, `${built.pkg.manifest.name} ${built.pkg.manifest.version}\n\nWidget API ${built.pkg.manifest.apiVersion}. Source commit ${sha}.\nSHA256 ${built.sha256}\n`);
       run('gh', ['release', 'create', tag, built.file, '--repo', flags.repo, '--target', sha, '--title', `${built.pkg.manifest.name} v${built.pkg.manifest.version}`, '--notes-file', notes]);
     } finally { await rm(temp, { recursive: true, force: true }); }
   } else if (!existing.assets.some(asset => asset.name === built.filename)) {
@@ -149,7 +149,7 @@ async function submit() {
 
 try {
   if (command === 'create') await create();
-  else if (command === 'validate') { const pkg = await loadProject(directory); print(`Valid API 1 widget: ${pkg.manifest.id} v${pkg.manifest.version}`); }
+  else if (command === 'validate') { const pkg = await loadProject(directory); print(`Valid API ${pkg.manifest.apiVersion} widget: ${pkg.manifest.id} v${pkg.manifest.version}`); }
   else if (command === 'pack') { const result = await pack(directory, path.resolve(flags.out ?? 'dist')); print({ file: result.file, sha256: result.sha256 }); }
   else if (command === 'preview') {
     const pkg = await loadProject(directory);

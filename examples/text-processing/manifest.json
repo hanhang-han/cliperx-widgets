@@ -1,0 +1,23 @@
+{
+  "id": "com.cliperx.text-processing",
+  "name": "文本处理",
+  "version": "0.1.0",
+  "apiVersion": 2,
+  "author": "CliperX",
+  "description": "改写、总结、翻译与本机文本清理，输入和模型由原生工作台管理。",
+  "license": "MIT",
+  "symbol": "text.cursor",
+  "sizes": [
+    "wide",
+    "small"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "network": [],
+    "openURL": false,
+    "clipboardWrite": false,
+    "systemMetrics": false,
+    "textProcessing": true
+  },
+  "settings": []
+}

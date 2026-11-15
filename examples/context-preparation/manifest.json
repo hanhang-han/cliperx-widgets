@@ -1,0 +1,23 @@
+{
+  "id": "com.cliperx.context-preparation",
+  "name": "上下文准备",
+  "version": "0.1.0",
+  "apiVersion": 2,
+  "author": "CliperX",
+  "description": "准备 AI 上下文，选择剪贴板素材，保留来源并控制估算 token 预算。",
+  "license": "MIT",
+  "symbol": "doc.on.doc",
+  "sizes": [
+    "wide",
+    "small"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "network": [],
+    "openURL": false,
+    "clipboardWrite": false,
+    "systemMetrics": false,
+    "contextPreparation": true
+  },
+  "settings": []
+}

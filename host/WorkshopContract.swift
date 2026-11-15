@@ -12,8 +12,11 @@ struct WorkshopPermissions: Codable, Equatable, Sendable {
     var openURL = false
     var clipboardWrite = false
     var systemMetrics = false
+    var contextPreparation = false
+    var textProcessing = false
+    var aiUsage = false
 
-    private enum CodingKeys: String, CodingKey { case network, openURL, clipboardWrite, systemMetrics }
+    private enum CodingKeys: String, CodingKey { case network, openURL, clipboardWrite, systemMetrics, contextPreparation, textProcessing, aiUsage }
     init() {}
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -21,6 +24,9 @@ struct WorkshopPermissions: Codable, Equatable, Sendable {
         openURL = try values.decodeIfPresent(Bool.self, forKey: .openURL) ?? false
         clipboardWrite = try values.decodeIfPresent(Bool.self, forKey: .clipboardWrite) ?? false
         systemMetrics = try values.decodeIfPresent(Bool.self, forKey: .systemMetrics) ?? false
+        contextPreparation = try values.decodeIfPresent(Bool.self, forKey: .contextPreparation) ?? false
+        textProcessing = try values.decodeIfPresent(Bool.self, forKey: .textProcessing) ?? false
+        aiUsage = try values.decodeIfPresent(Bool.self, forKey: .aiUsage) ?? false
     }
 
     var summary: String {
@@ -28,6 +34,9 @@ struct WorkshopPermissions: Codable, Equatable, Sendable {
         if openURL { parts.append("点击后打开网页") }
         if clipboardWrite { parts.append("点击后写入剪贴板") }
         if systemMetrics { parts.append("读取系统性能数据") }
+        if contextPreparation { parts.append("打开原生上下文选材，读取选材数量与估算用量") }
+        if textProcessing { parts.append("打开原生文字处理，模型与发送内容由用户选择") }
+        if aiUsage { parts.append("通过本机 CodexBar 读取标准化用量与重置时间") }
         return parts.isEmpty ? "本地计算与组件独立存储" : parts.joined(separator: "\n")
     }
 }
@@ -64,7 +73,10 @@ struct WorkshopManifest: Codable, Equatable, Identifiable, Sendable {
     }
 
     func validate() throws {
-        guard apiVersion == 1 else { throw WorkshopError.invalid("组件需要其他版本的开发 API。") }
+        guard [1, 2].contains(apiVersion) else { throw WorkshopError.invalid("组件需要其他版本的开发 API。") }
+        guard apiVersion >= 2 || !(permissions.contextPreparation || permissions.textProcessing || permissions.aiUsage) else {
+            throw WorkshopError.invalid("AI 能力需要 Widget API 2。")
+        }
         guard Self.validID(id), id.utf8.count <= 100 else { throw WorkshopError.invalid("组件 ID 格式无效。") }
         guard version.range(of: #"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$"#, options: .regularExpression) != nil else {
             throw WorkshopError.invalid("版本号应为 x.y.z。")

@@ -1,4 +1,4 @@
-# Widget API 1
+# Widget API 1/2
 
 组件工程包含 `manifest.json` 和 `widget.js`。`.cliperxwidget` 是 UTF-8 JSON 文件，根字段为 `formatVersion: 1`、`manifest` 和 `script`。打包工具生成该文件，大小上限 256 KB，脚本上限 128 KB。
 
@@ -8,7 +8,7 @@
 |---|---|
 | id | 反向域名，英文小写、数字和短横线，例如 com.author.widget，最多 100 字节 |
 | name / author / description | 名称最多 60 字，作者 80 字，描述 300 字 |
-| version / apiVersion | x.y.z 版本号，API 版本为 1 |
+| version / apiVersion | x.y.z 版本号，API 版本为 1 或 2，原生 AI 能力要求 2 |
 | license / symbol | 许可证标识与 SF Symbol 名称，各最多 80 字 |
 | sizes | small、wide 中的一种或两种，第一种为添加时的默认大小 |
 | refreshSeconds | 10～86400 秒，App 仅在灵动岛展开且组件启用时定期刷新 |
@@ -86,3 +86,23 @@ node /path/to/cliperx-widgets/bin/widget.mjs pack /path/to/widget --out /path/to
 ```
 
 `--fixture context.json` 可覆盖 now、settings、state、data、errors 等上下文。点击预览输出的 state 可以保存进下一份 fixture，验证连续操作。普通预览使用开发机 Node VM，App 使用签名的 App Sandbox JavaScriptCore 辅助进程，可用 `--runner` 指定该可执行文件完成宿主验证。
+
+## API 2 原生 AI 能力
+
+三项新权限默认为 false，须使用 `apiVersion: 2`。旧 API 1 组件继续按原协议运行。新组件需安装支持 API 2 的灵剪开发构建，当前宿主集成源码见 `host/integration/`。
+
+| 权限 | 脚本上下文 | 点击效果 |
+|---|---|---|
+| contextPreparation | contextPack.count、estimatedTokens、shortened、unavailable | `{ type: 'context.prepare', value: '' }` |
+| textProcessing | textProcessing.appleAvailable | `{ type: 'text.process', value: '' }` |
+| aiUsage | aiUsage.status、provider、updatedAt、windows、error | `{ type: 'aiUsage.refresh', value: '' }` |
+
+原生效果的 value 固定为空字符串。后台刷新仅可更新卡片。三个官方组件位于 `examples/context-preparation`、`examples/text-processing`、`examples/ai-usage`，可参照其权限声明、离线状态和点击入口。
+
+上下文准备的原生窗口最多选择 20 条文字素材，列出最近 100 条并支持搜索。已选历史内容在预览与复制前重新读取并应用灵剪隐私过滤。选材 ID、任务和预算按实例本地保存。正文、标题、来源在原生界面预览，组件脚本获得计数和估算 tokens。素材去重后按选择顺序控制预算，正文截断会显示标记。token 为字符启发式估算，供应商实际 tokenizer 会有差异。
+
+文本处理在原生界面粘贴、编辑和查看结果。支持改写、总结、翻译、自定义指令，以及本机清理空白、逐行去重和格式化 JSON。模型可选 Apple Intelligence 或完整的 OpenAI 兼容 chat/completions 地址。Ollama 可用 `http://localhost:11434/v1/chat/completions`。HTTP 限于本机回环地址，其余地址要求 HTTPS，重定向被拒绝。API Key 按接口地址保存在 macOS Keychain。模型调用由用户点击发起，正文与密钥在宿主内部使用。
+
+AI 用量依赖用户本机安装并已登录的 [CodexBar](https://github.com/steipete/CodexBar)。配置项 provider 支持 codex、claude。宿主调用固定的 CLI 参数，读取标准化的额度窗口，自动请求至少间隔 60 秒，手动刷新最短 10 秒。windows 包含 label、usedPercent、resetsAt、windowMinutes。status 为 ready、stale、unavailable，读取失败时可保留带时间标记的旧数据。脚本只接收窗口数值、状态、错误和更新时间。
+
+开发预览可通过 `--fixture` 注入这些字段。预览命令展示能力请求，原生交互和本机 CLI 接入在 App 中验收。当前公共宿主协议、核心逻辑及原生集成代码均随仓库开源。

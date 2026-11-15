@@ -54,7 +54,7 @@ test('background effects and undeclared permissions are rejected before executio
 });
 
 test('invalid identifiers, sizes, intervals and duplicate settings cannot be packaged', () => {
-  for (const patch of [{ id: '../unsafe' }, { apiVersion: 2 }, { version: 'latest' }, { sizes: ['large'] }, { refreshSeconds: 0 },
+  for (const patch of [{ id: '../unsafe' }, { apiVersion: 3 }, { version: 'latest' }, { sizes: ['large'] }, { refreshSeconds: 0 },
     { settings: [{ key: 'x', title: 'X', default: '' }, { key: 'x', title: 'X', default: '' }] }]) {
     assert.throws(() => validateManifest({ ...focus.manifest, ...patch }));
   }
@@ -97,4 +97,32 @@ test('a newly created component can be validated, previewed and packaged through
 
 test('developer preview interrupts an infinite loop', () => {
   assert.throws(() => preview({ ...focus, script: 'while (true) {}' }, context), /timed out/);
+});
+
+const nativeProjects = ['context-preparation', 'text-processing', 'ai-usage'];
+for (const slug of nativeProjects) {
+  test(`API 2 ${slug} renders offline, requests its declared native capability and rejects background effects`, async () => {
+    const pkg = await loadProject(path.join(root, 'examples', slug));
+    const actions = { 'context-preparation': 'prepare', 'text-processing': 'process', 'ai-usage': 'refresh' };
+    const baseline = preview(pkg, context);
+    const result = preview(pkg, context, actions[slug]);
+    assert.equal(result.effects.length, 1);
+    assert.throws(() => validateResult(result, pkg.manifest, null));
+    assert.throws(() => validateResult(result, { ...pkg.manifest, permissions: {} }, actions[slug]));
+    assert.throws(() => validateManifest({ ...pkg.manifest, apiVersion: 1 }));
+    assert.ok(baseline.view.value);
+    assert.throws(() => validateResult({ ...result, effects: [{ ...result.effects[0], value: 'injected text' }] }, pkg.manifest, actions[slug]));
+  });
+}
+
+test('AI cards show genuine context counts and quota windows, including stale and unavailable states', async () => {
+  const contextWidget = await loadProject(path.join(root, 'examples/context-preparation'));
+  const pack = preview(contextWidget, { ...context, contextPack: { count: 3, estimatedTokens: 2000, shortened: 1, unavailable: 0 } });
+  assert.equal(pack.view.value, '3 条素材');
+  const quota = await loadProject(path.join(root, 'examples/ai-usage'));
+  const input = { ...context, settings: { provider: 'codex' }, aiUsage: { status: 'ready', windows: [{ label: 'Weekly', usedPercent: 6, resetsAt: '2026-11-21T03:00:00Z' }] } };
+  assert.equal(preview(quota, input).view.value, '94% 剩余');
+  assert.equal(preview(quota, input).view.progress, 0.06);
+  assert.match(preview(quota, { ...input, aiUsage: { ...input.aiUsage, status: 'stale' } }).view.subtitle, /缓存/);
+  assert.equal(preview(quota, { ...context, aiUsage: { status: 'unavailable' } }).view.value, '待连接');
 });

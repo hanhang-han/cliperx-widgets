@@ -14,3 +14,8 @@ jobs:
           node-version: '20'
       - run: npm test
       - run: node bin/check-catalog.mjs --download
+  native:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash host/test-ai-core.sh

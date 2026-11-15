@@ -2,7 +2,7 @@
 
 为灵剪的灵动岛开发社区小组件。组件使用 JavaScript 返回卡片数据，由灵剪原生渲染，支持点阵科技、卡证拟物两种主题和单格、双格布局。
 
-本仓库提供 Widget API 1、命令行工具、示例、公共组件目录，以及 Codex / Claude Code Skill。基础版本的发布包和目录托管在 GitHub，目录收录通过 Pull Request 审核。
+本仓库提供 Widget API 1/2、命令行工具、示例、公共组件目录，以及 Codex / Claude Code Skill。基础版本的发布包和目录托管在 GitHub，目录收录通过 Pull Request 审核。
 
 ## 运行条件
 
@@ -30,6 +30,9 @@ node bin/widget.mjs pack ../my-widget --out dist
 | 组件 | 功能 | 网络权限 |
 |---|---|---|
 | [专注计时](examples/focus-timer) | 开始、暂停、重置、原生倒计时、可配置时长 | 本地运行 |
+| [上下文准备](examples/context-preparation) | 选材、去重、来源预览和 token 预算 | API 2 原生能力 |
+| [文本处理](examples/text-processing) | 改写、总结、翻译、本机清理 | API 2 原生能力 |
+| [AI 用量](examples/ai-usage) | Codex / Claude 额度、重置和缓存状态 | API 2，本机 CodexBar |
 | [GitHub 仓库](examples/github-stars) | Star、Fork、Issue、点击打开仓库、可配置仓库 | api.github.com |
 
 ```bash
@@ -81,3 +84,9 @@ ln -s "$PWD/skills/cliperx-widget-development" ~/.claude/skills/cliperx-widget-d
 ## 许可
 
 SDK、开发工具、示例和 Skill 使用 [MIT](LICENSE) 许可。社区作者在组件清单中声明各自许可证，并负责所提交代码和资源的授权。
+
+## 官方 AI 组件
+
+三个 AI 组件要求支持 Widget API 2 的灵剪开发构建。文本模型需要 Apple Intelligence 可用，或用户配置自己的 OpenAI 兼容接口 / Ollama。AI 用量读取用户本机 CodexBar 的已登录账户。
+
+核心逻辑与 SwiftUI 集成源码位于 [host/integration](host/integration)。待开发方向记录在 [BACKLOG.md](BACKLOG.md)。
