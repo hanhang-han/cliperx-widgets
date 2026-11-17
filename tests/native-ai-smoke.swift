@@ -42,5 +42,15 @@ import Foundation
             do { _ = try WorkshopUsageParser.parse(Data(value.utf8), provider: "codex"); preconditionFailure("Invalid quota accepted") } catch {}
         }
         print("PASS real CodexBar schema, null primary window, secret stripping and invalid quota rejection")
+        var events = WorkshopCodexEvents()
+        let thread = UUID().uuidString
+        try events.accept(JSONSerialization.data(withJSONObject: ["type": "thread.started", "thread_id": thread]))
+        try events.accept(Data(#"{"type":"item.completed","item":{"type":"agent_message","text":"synthetic reply"}}"#.utf8))
+        try events.accept(Data(#"{"type":"turn.completed"}"#.utf8))
+        precondition(events.threadID == thread && events.text == "synthetic reply" && events.completed)
+        var failure = WorkshopCodexEvents()
+        try failure.accept(Data(#"{"type":"turn.failed","error":{"message":"synthetic failure"}}"#.utf8))
+        precondition(failure.error == "synthetic failure" && !failure.completed)
+        print("PASS Codex completion receipts, thread identifiers and failure events")
     }
 }

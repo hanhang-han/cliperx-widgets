@@ -1,0 +1,21 @@
+{
+  "id": "com.cliperx.music",
+  "name": "音乐",
+  "version": "1.0.0",
+  "apiVersion": 3,
+  "author": "CliperX",
+  "description": "Apple Music 曲目与播放控制",
+  "license": "MIT",
+  "symbol": "music.note",
+  "sizes": [
+    "wide"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "musicControl": true
+  },
+  "presentation": {
+    "card": "music",
+    "multipleInstances": false
+  }
+}

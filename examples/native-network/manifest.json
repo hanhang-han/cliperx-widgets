@@ -1,0 +1,23 @@
+{
+  "id": "com.cliperx.network",
+  "name": "网速",
+  "version": "1.0.0",
+  "apiVersion": 3,
+  "author": "CliperX",
+  "description": "下载、上传与传输趋势",
+  "license": "MIT",
+  "symbol": "arrow.up.arrow.down",
+  "sizes": [
+    "small",
+    "wide"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "systemMetrics": true
+  },
+  "presentation": {
+    "card": "metric",
+    "multipleInstances": false,
+    "metric": "network"
+  }
+}

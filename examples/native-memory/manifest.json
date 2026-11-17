@@ -1,0 +1,23 @@
+{
+  "id": "com.cliperx.memory",
+  "name": "内存",
+  "version": "1.0.0",
+  "apiVersion": 3,
+  "author": "CliperX",
+  "description": "已用容量与内存压力",
+  "license": "MIT",
+  "symbol": "memorychip",
+  "sizes": [
+    "small",
+    "wide"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "systemMetrics": true
+  },
+  "presentation": {
+    "card": "metric",
+    "multipleInstances": false,
+    "metric": "memory"
+  }
+}

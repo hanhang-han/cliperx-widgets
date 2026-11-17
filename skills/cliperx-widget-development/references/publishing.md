@@ -1,4 +1,51 @@
-# 发布和提交工坊
+# 工坊投稿与发布
+
+工坊 API 使用 `https://api.cliperx.com/api/workshop`。作者通过已有灵剪账号进行浏览器授权，提交 `.cliperxwidget` 包并查看审核状态。
+
+## 本地包投稿
+
+```bash
+node /path/to/cliperx-widgets/bin/widget.mjs login
+node /path/to/cliperx-widgets/bin/widget.mjs upload /path/to/my-widget --source https://github.com/author/repository
+node /path/to/cliperx-widgets/bin/widget.mjs status
+node /path/to/cliperx-widgets/bin/widget.mjs status SUBMISSION_ID
+```
+
+授权时浏览器显示验证码与登录账号，确认后 CLI 保存专属工坊令牌。macOS 使用系统钥匙串，其他开发平台使用 0600 权限的本地文件。`whoami` 查看当前工坊账号，`logout` 撤销并移除令牌。`--no-open` 打印授权链接供手动打开，`--api URL` 选择明确的 HTTPS 服务或本机回环开发服务。
+
+`upload` 校验并打包工程、创建投稿、更新元数据、上传包和提交审核，输出投稿 ID、版本、包哈希和服务端状态。`--draft` 保存草稿后停止，`submit --submission ID` 可继续提交。同版本同内容重复上传返回已有投稿；已发布版本内容变化需要递增版本号。
+
+待审状态使用 `withdraw ID` 撤回再修改，`status ID` 显示检查结果和审核意见。需要修改的稿件在更新后重新提交。审核批准后才进入公开目录，下载地址由服务返回。
+
+## 工坊说明
+
+工程中的 `workshop.json` 可填写以下字段，也可使用 `--metadata FILE`。
+
+```json
+{
+  "category": "clipboard",
+  "tags": ["整理"],
+  "readme": "选择复制的材料，点击组件开始处理。",
+  "changelog": "首次发布。",
+  "minAppVersion": "4.0.15",
+  "feedbackURL": "https://github.com/author/repository/issues"
+}
+```
+
+分类支持 clipboard、ai、productivity、system、other。标签最多八个，每个 40 字。使用说明最多 20000 字，更新记录 4000 字，最低版本采用 x.y.z。截图通过工坊网站上传，每条最多四张，每张不超过 2 MB。包的作者文字用于展示，组件归属由已登录账号确定。
+
+## GitHub 包导入
+
+已有 GitHub Release 工具可以继续创建公开下载包。
+
+```bash
+node /path/to/cliperx-widgets/bin/widget.mjs publish /path/to/my-widget --repo author/repository
+node /path/to/cliperx-widgets/bin/widget.mjs import --entry /path/to/dist/com.author.widget.entry.json
+```
+
+导入服务校验来源、完整清单和 SHA256，然后创建投稿并提交审核。`import --draft` 只建立草稿。
+
+## 已有 GitHub 目录 PR 流程
 
 公开目录位于 `hanhang-han/cliperx-widgets` 的 `registry/index.json`。组件包保存在作者公开仓库的 GitHub Release，目录记录完整清单、下载地址、SHA256 和源码提交地址。
 

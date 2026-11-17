@@ -1,0 +1,11 @@
+{
+  "category": "ai",
+  "tags": [
+    "排障",
+    "Bug 单"
+  ],
+  "readme": "在灵剪选择报错、日志或截图，填写产品名称，检查材料和任务指令后点击运行。需要本机已登录的 Codex 和支持 Widget API 4 的灵剪。回答可以继续追问或复制，引用保持原始材料来源。",
+  "changelog": "首个自定义 AI 任务示例。",
+  "minAppVersion": "4.0.15",
+  "feedbackURL": "https://github.com/hanhang-han/cliperx-widgets/issues"
+}

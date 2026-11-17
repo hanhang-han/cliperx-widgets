@@ -4,13 +4,17 @@ import { execFileSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
 import os from 'node:os';
 import path from 'node:path';
-import { assert, digest, loadProject, pack, preview, sourceURL, validateEntry, validateManifest, validateResult } from '../lib/protocol.mjs';
+import { runWorkshopCommand } from '../lib/workshop-client.mjs';
+import { assert, digest, loadProject, pack, preview, sourceURL, validateEntry, validateManifest, validateResult, renderTask } from '../lib/protocol.mjs';
 
 const command = process.argv[2] ?? 'help';
 const { values: flags, positionals } = parseArgs({ args: process.argv.slice(3), allowPositionals: true, options: {
   id: { type: 'string' }, name: { type: 'string' }, author: { type: 'string' }, out: { type: 'string' },
   repo: { type: 'string' }, tag: { type: 'string' }, entry: { type: 'string' }, catalog: { type: 'string' },
-  fixture: { type: 'string' }, action: { type: 'string' }, runner: { type: 'string' }, live: { type: 'boolean', default: false },
+  fixture: { type: 'string' }, action: { type: 'string' }, runner: { type: 'string' }, template: { type: 'string' },
+  live: { type: 'boolean', default: false },
+  api: { type: 'string' }, metadata: { type: 'string' }, source: { type: 'string' }, submission: { type: 'string' },
+  draft: { type: 'boolean', default: false }, 'no-open': { type: 'boolean', default: false },
 } });
 const directory = path.resolve(positionals[0] ?? '.');
 const print = value => process.stdout.write(`${typeof value === 'string' ? value : JSON.stringify(value, null, 2)}\n`);
@@ -52,14 +56,100 @@ async function liveSources(pkg, context) {
 
 async function create() {
   const slug = path.basename(directory).toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const template = flags.template ?? 'basic';
+  assert(['basic', 'info', 'task-context', 'task-ai', 'task-text', 'task-basket', 'native-music', 'native-agent', 'native-metric', 'native-basket', 'native-ccswitch'].includes(template), 'Unknown widget template');
   const manifest = { id: flags.id ?? `com.example.${slug}`, name: flags.name ?? slug, version: '0.1.0', apiVersion: 1,
     author: flags.author ?? 'Your Name', description: '显示一条可配置的文字', license: 'MIT', symbol: 'sparkle',
     sizes: ['small', 'wide'], refreshSeconds: 60, permissions: { network: [], openURL: false, clipboardWrite: false, systemMetrics: false },
     settings: [{ key: 'message', title: '显示文字', default: 'Hello, 灵剪' }] };
+  let script = `defineWidget({\n  render(context) {\n    return { title: ${JSON.stringify(manifest.name)}, value: context.settings.message, symbol: 'sparkle' };\n  }\n});\n`;
+  if (template === 'info') {
+    manifest.description = '在灵动岛显示主值和补充信息，点击查看详情。';
+    manifest.symbol = 'text.alignleft';
+    manifest.settings = [
+      { key: 'value', title: '主值', default: '今天已整理 12 条' },
+      { key: 'subtitle', title: '补充信息', default: '点击查看详情' }
+    ];
+    script = `defineWidget({\n  render(context) {\n    return {\n      title: ${JSON.stringify(manifest.name)},\n      value: context.settings.value || '—',\n      subtitle: context.settings.subtitle || '',\n      symbol: 'text.alignleft',\n      details: [{ label: '当前信息', value: context.settings.value || '暂无数据' }]\n    };\n  }\n});\n`;
+  } else if (template === 'task-context' || template === 'task-ai') {
+    manifest.apiVersion = 2;
+    manifest.description = '点选剪贴板中的文字和图片，在原生任务区使用 Codex 问答。';
+    manifest.symbol = 'doc.on.doc';
+    manifest.sizes = ['small'];
+    manifest.refreshSeconds = 30;
+    manifest.permissions.contextPreparation = true;
+    manifest.settings = [];
+    script = `defineWidget({\n  render(context) {\n    const pack = context.contextPack;\n    return {\n      title: ${JSON.stringify(manifest.name)},\n      value: pack && pack.count ? '已选 ' + pack.count + ' 项' : pack && pack.hasConversation ? '继续提问' : '问 Codex',\n      symbol: 'doc.on.doc',\n      primaryAction: 'prepare',\n      actions: [{ id: 'prepare', title: '选择材料' }]\n    };\n  },\n  onAction(action) {\n    return action === 'prepare' ? { effects: [{ type: 'context.prepare', value: '' }] } : {};\n  }\n});\n`;
+  } else if (template === 'task-text') {
+    manifest.apiVersion = 2;
+    manifest.description = '点选文字卡片，在原生任务区翻译或处理文本。';
+    manifest.symbol = 'character.bubble';
+    manifest.sizes = ['small'];
+    manifest.refreshSeconds = 30;
+    manifest.permissions.textProcessing = true;
+    manifest.settings = [];
+    script = `defineWidget({\n  render(context) {\n    const task = context.textProcessing || {};\n    return {\n      title: ${JSON.stringify(manifest.name)},\n      value: task.busy ? '处理中' : task.actionTitle || '翻译',\n      symbol: 'character.bubble',\n      primaryAction: 'process',\n      actions: [{ id: 'process', title: '选择文字' }]\n    };\n  },\n  onAction(action) {\n    return action === 'process' ? { effects: [{ type: 'text.process', value: '' }] } : {};\n  }\n});\n`;
+  } else if (template === 'task-basket') {
+    manifest.apiVersion = 2;
+    manifest.description = '按复制顺序收集内容，在原生任务区整理并粘贴。';
+    manifest.symbol = 'tray.full';
+    manifest.sizes = ['small'];
+    manifest.refreshSeconds = 30;
+    manifest.permissions.collectionBasket = true;
+    manifest.settings = [];
+    script = `defineWidget({\n  render(context) {\n    const basket = context.collectionBasket || {};\n    return {\n      title: ${JSON.stringify(manifest.name)},\n      value: (basket.count || 0) + ' 条 · ' + (basket.autoCollect ? '收集中' : '已暂停'),\n      symbol: 'tray.full',\n      primaryAction: 'open',\n      actions: [{ id: 'open', title: '打开收集篮' }]\n    };\n  },\n  onAction(action) {\n    return action === 'open' ? { effects: [{ type: 'basket.open', value: '' }] } : {};\n  }\n});\n`;
+  }
+  if (template === 'task-ai') {
+    manifest.apiVersion = 4;
+    manifest.description = '根据选中的报错、日志和截图，使用自己的 Codex 生成 Bug 单。';
+    manifest.presentation = { card: 'standard', workspace: 'context' };
+    manifest.task = {
+      input: { types: ['text', 'image'], minItems: 1, maxItems: 12 },
+      parameters: [{ key: 'product', title: '产品名称', default: '', required: true }],
+      prompt: '根据选中的材料，为 {{parameters.product}} 生成 Bug 单。使用 Markdown，包含标题、现象、复现步骤、预期结果、实际结果、已有证据和待确认信息。引用材料时保留来源编号，区分事实与推断。用户补充要求 {{question}}',
+      output: { format: 'markdown' },
+    };
+  }
+  if (template.startsWith('native-')) {
+    const card = template.slice(7);
+    manifest.apiVersion = 3;
+    manifest.presentation = { card, multipleInstances: false };
+    manifest.settings = [];
+    manifest.refreshSeconds = 30;
+    script = '';
+    if (card === 'music') {
+      manifest.permissions.musicControl = true;
+      manifest.symbol = 'music.note';
+      manifest.sizes = ['wide'];
+      manifest.description = '使用宿主的 Apple Music 状态和原生播放控制。';
+    } else if (card === 'agent') {
+      manifest.permissions.agentConversations = true;
+      manifest.presentation.workspace = 'agent';
+      manifest.symbol = 'terminal';
+      manifest.sizes = ['small'];
+      manifest.description = '在宿主 Agent 工作区关注和继续 Codex 对话。';
+    } else if (card === 'basket') {
+      manifest.permissions.collectionBasket = true;
+      manifest.presentation.workspace = 'basket';
+      manifest.symbol = 'tray.full';
+      manifest.sizes = ['small'];
+      manifest.description = '打开宿主的共享收集篮。';
+    } else if (card === 'ccswitch') {
+      manifest.permissions.providerConfiguration = true;
+      manifest.symbol = 'arrow.triangle.swap';
+      manifest.sizes = ['small'];
+      manifest.description = '通过原生界面管理并切换编程工具的服务商配置。';
+    } else if (card === 'metric') {
+      manifest.permissions.systemMetrics = true;
+      manifest.presentation.metric = 'cpu';
+      manifest.symbol = 'cpu';
+      manifest.description = '使用宿主的实时 CPU 指标与趋势图。';
+    }
+  }
   validateManifest(manifest);
   await mkdir(directory);
   await writeFile(path.join(directory, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  await writeFile(path.join(directory, 'widget.js'), `defineWidget({\n  render(context) {\n    return { title: ${JSON.stringify(manifest.name)}, value: context.settings.message, symbol: 'sparkle' };\n  }\n});\n`);
+  if (script) await writeFile(path.join(directory, 'widget.js'), script);
   print(`Created ${directory}`);
 }
 
@@ -148,7 +238,9 @@ async function submit() {
 }
 
 try {
-  if (command === 'create') await create();
+  if (['login', 'logout', 'whoami', 'upload', 'status', 'import', 'withdraw'].includes(command) || command === 'submit' && flags.submission) {
+    await runWorkshopCommand(command, directory, flags, print, positionals[0]);
+  } else if (command === 'create') await create();
   else if (command === 'validate') { const pkg = await loadProject(directory); print(`Valid API ${pkg.manifest.apiVersion} widget: ${pkg.manifest.id} v${pkg.manifest.version}`); }
   else if (command === 'pack') { const result = await pack(directory, path.resolve(flags.out ?? 'dist')); print({ file: result.file, sha256: result.sha256 }); }
   else if (command === 'preview') {
@@ -157,9 +249,15 @@ try {
     const context = { now: new Date().toISOString(), settings: Object.fromEntries((pkg.manifest.settings ?? []).map(field => [field.key, field.default])),
       state: {}, data: {}, errors: {}, ...fixture };
     if (flags.live) await liveSources(pkg, context);
-    const result = flags.runner ? JSON.parse(run(flags.runner, [], { input: JSON.stringify({ script: pkg.script, context, action: flags.action ?? null }), timeout: 3000 }))
+    const result = flags.runner && pkg.script ? JSON.parse(run(flags.runner, [], { input: JSON.stringify({ script: pkg.script, context, action: flags.action ?? null }), timeout: 3000 }))
       : preview(pkg, context, flags.action ?? null);
-    print(validateResult(result, pkg.manifest, flags.action));
+    const output = validateResult(result, pkg.manifest, flags.action);
+    if (pkg.manifest.task) {
+      output.taskPreview = { input: pkg.manifest.task.input, parameters: pkg.manifest.task.parameters };
+      try { output.taskPreview.instruction = renderTask(pkg.manifest.task, fixture.parameters, fixture.question); }
+      catch (error) { output.taskPreview.error = error.message; }
+    }
+    print(output);
   } else if (command === 'publish') await publish();
   else if (command === 'submit') await submit();
   else if (command === 'catalog-add') {
@@ -170,7 +268,7 @@ try {
     await writeFile(file, `${JSON.stringify(index, null, 2)}\n`);
     print(`Added ${entry.manifest.id}`);
   } else {
-    print('CliperX Widget CLI 0.1\n\ncreate DIR --id com.author.name --name NAME --author NAME\nvalidate DIR\npreview DIR [--fixture context.json] [--live] [--action ID] [--runner PATH]\npack DIR [--out dist]\npublish DIR --repo owner/repo [--tag TAG]\nsubmit --entry dist/id.entry.json [--catalog owner/catalog]\ncatalog-add CATALOG_DIR --entry dist/id.entry.json');
+    print('CliperX Widget CLI 0.2\n\ncreate DIR --id com.author.name --name NAME --author NAME [--template basic|info|task-context|task-ai|task-text|task-basket|native-music|native-agent|native-metric|native-basket|native-ccswitch]\nvalidate DIR\npreview DIR [--fixture context.json] [--live] [--action ID] [--runner PATH]\npack DIR [--out dist]\npublish DIR --repo owner/repo [--tag TAG]\nlogin [--no-open] [--api URL]\nlogout\nwhoami\nupload DIR [--source HTTPS_URL] [--metadata workshop.json] [--draft] [--api URL]\nimport --entry dist/id.entry.json [--draft]\nstatus [SUBMISSION_ID]\nsubmit --submission ID\nwithdraw ID\nsubmit --entry dist/id.entry.json [--catalog owner/catalog]\ncatalog-add CATALOG_DIR --entry dist/id.entry.json');
   }
 } catch (error) {
   let message = error.message;

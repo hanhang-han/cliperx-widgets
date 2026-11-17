@@ -1,14 +1,13 @@
 {
   "id": "com.cliperx.text-processing",
   "name": "文本处理",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "apiVersion": 2,
   "author": "CliperX",
-  "description": "改写、总结、翻译与本机文本清理，输入和模型由原生工作台管理。",
+  "description": "点选一张剪贴板卡片立即翻译，支持灵剪、Codex 和自定义模型来源，并在岛内查看和复制译文。",
   "license": "MIT",
-  "symbol": "text.cursor",
+  "symbol": "character.bubble",
   "sizes": [
-    "wide",
     "small"
   ],
   "refreshSeconds": 30,

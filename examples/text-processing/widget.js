@@ -1,17 +1,17 @@
 defineWidget({
   render(context) {
-    const local = context.textProcessing?.appleAvailable;
+    const text = context.textProcessing || {};
     return {
       title: '文本处理',
-      value: '改写 · 总结 · 翻译',
-      subtitle: local ? 'Apple Intelligence 已就绪' : '自选模型 · 支持本机清理',
-      symbol: 'text.cursor',
+      value: text.busy ? '处理中' : (text.actionTitle || '翻译'),
+      symbol: 'character.bubble',
       details: [
-        { label: 'AI 处理', value: 'Apple Intelligence 或 OpenAI 兼容接口、Ollama' },
-        { label: '本机工具', value: '清理空白、逐行去重、格式化 JSON' },
-        { label: '输入', value: '在原生工作台粘贴并预览' }
+        { label: '操作', value: '点选一张文字卡片立即处理' },
+        { label: '来源', value: '灵剪、Codex、自定义模型' },
+        { label: '设置', value: '岛内结果区可切换语言、来源和默认动作' }
       ],
-      actions: [{ id: 'process', title: '打开文本处理' }]
+      primaryAction: 'process',
+      actions: [{ id: 'process', title: '翻译文字' }]
     };
   },
   onAction(action) {

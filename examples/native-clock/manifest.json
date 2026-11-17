@@ -1,0 +1,21 @@
+{
+  "id": "com.cliperx.clock",
+  "name": "时钟",
+  "version": "1.0.0",
+  "apiVersion": 3,
+  "author": "CliperX",
+  "description": "本机时间与日期",
+  "license": "MIT",
+  "symbol": "clock",
+  "sizes": [
+    "small",
+    "wide"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {},
+  "presentation": {
+    "card": "metric",
+    "multipleInstances": false,
+    "metric": "clock"
+  }
+}

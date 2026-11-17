@@ -19,3 +19,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash host/test-ai-core.sh
+      - run: bash host/test-task.sh

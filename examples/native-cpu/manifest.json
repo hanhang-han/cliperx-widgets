@@ -1,0 +1,23 @@
+{
+  "id": "com.cliperx.cpu",
+  "name": "CPU",
+  "version": "1.0.0",
+  "apiVersion": 3,
+  "author": "CliperX",
+  "description": "处理器占用与实时趋势",
+  "license": "MIT",
+  "symbol": "cpu",
+  "sizes": [
+    "small",
+    "wide"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "systemMetrics": true
+  },
+  "presentation": {
+    "card": "metric",
+    "multipleInstances": false,
+    "metric": "cpu"
+  }
+}

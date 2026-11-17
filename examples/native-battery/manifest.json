@@ -1,0 +1,23 @@
+{
+  "id": "com.cliperx.battery",
+  "name": "电量",
+  "version": "1.0.0",
+  "apiVersion": 3,
+  "author": "CliperX",
+  "description": "当前电量与充电状态",
+  "license": "MIT",
+  "symbol": "battery.75percent",
+  "sizes": [
+    "small",
+    "wide"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "systemMetrics": true
+  },
+  "presentation": {
+    "card": "metric",
+    "multipleInstances": false,
+    "metric": "battery"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "com.cliperx.agent",
+  "name": "Agent",
+  "version": "1.0.0",
+  "apiVersion": 3,
+  "author": "CliperX",
+  "description": "关注 Codex 对话，查看历史与任务完成状态",
+  "license": "MIT",
+  "symbol": "terminal",
+  "sizes": [
+    "small"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "agentConversations": true
+  },
+  "presentation": {
+    "card": "agent",
+    "multipleInstances": false,
+    "workspace": "agent"
+  }
+}

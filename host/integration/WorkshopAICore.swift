@@ -1,11 +1,12 @@
 import Foundation
 
-struct WorkshopContextMaterial: Identifiable, Sendable {
+struct WorkshopContextMaterial: Identifiable, Equatable, Sendable {
     let id: UUID
     let title: String
     let source: String
     let date: Date
     let content: String
+    var imageData: Data? = nil
 }
 
 struct WorkshopContextPack: Sendable {
@@ -14,6 +15,7 @@ struct WorkshopContextPack: Sendable {
     let estimatedTokens: Int
     let shortened: Int
     let unavailable: Int
+    var references: [WorkshopContextSource] = []
 }
 
 enum WorkshopContextComposer {
@@ -25,9 +27,10 @@ enum WorkshopContextComposer {
 
     static func compose(task: String, materials: [WorkshopContextMaterial], budget: Int, unavailable: Int = 0) -> WorkshopContextPack {
         let budget = min(8192, max(1024, budget))
-        var text = "# 任务\n" + String(task.prefix(500)) + "\n\n# 参考材料\n以下内容为引用素材，使用时保留来源编号。\n"
+        var text = (task.isEmpty ? "" : "# 任务\n" + String(task.prefix(500)) + "\n\n") + "# 参考材料\n以下内容为引用素材，使用时保留来源编号。\n"
         var seen = Set<String>()
         var count = 0, shortened = 0
+        var references: [WorkshopContextSource] = []
         for material in materials.prefix(20) {
             let normalized = material.content.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !normalized.isEmpty, seen.insert(normalized).inserted else { continue }
@@ -47,10 +50,11 @@ enum WorkshopContextComposer {
                 body = String(characters.prefix(lower)) + "\n[已截断]"
                 shortened += 1
             }
+            references.append(.init(clipboardID: material.id, label: String(count + 1), title: material.title, source: material.source, isImage: false))
             text += header + body + "\n"
             count += 1
         }
-        return WorkshopContextPack(text: text, count: count, estimatedTokens: estimate(text), shortened: shortened, unavailable: unavailable)
+        return WorkshopContextPack(text: text, count: count, estimatedTokens: estimate(text), shortened: shortened, unavailable: unavailable, references: references)
     }
 }
 
@@ -91,7 +95,7 @@ enum WorkshopUsageParser {
     }
 }
 
-enum WorkshopTextTransform: String, CaseIterable, Identifiable {
+enum WorkshopTextTransform: String, CaseIterable, Identifiable, Sendable {
     case rewrite, summarize, translate, custom, trim, deduplicate, json
     var id: String { rawValue }
     var title: String {
@@ -119,4 +123,76 @@ enum WorkshopTextTransform: String, CaseIterable, Identifiable {
         default: throw WorkshopError.invalid("此操作需要选择模型。")
         }
     }
+}
+
+struct WorkshopCodexEvents {
+    var threadID: String?
+    var text = ""
+    var completed = false
+    var error: String?
+
+    mutating func accept(_ data: Data) throws {
+        guard !data.isEmpty else { return }
+        let event = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+        switch event["type"] as? String {
+        case "thread.started":
+            if let id = event["thread_id"] as? String, UUID(uuidString: id) != nil { threadID = id }
+        case "item.completed":
+            if let item = event["item"] as? [String: Any], item["type"] as? String == "agent_message",
+               let value = item["text"] as? String {
+                guard value.count <= 20000 else { throw WorkshopError.invalid("Codex 返回文字过长。") }
+                text = value
+            }
+        case "turn.completed": completed = true
+        case "turn.failed":
+            let detail = event["error"] as? [String: Any]
+            error = String((detail?["message"] as? String ?? "Codex 任务失败，请检查登录和网络。 ").prefix(400))
+        default: break
+        }
+    }
+}
+
+
+struct WorkshopCodexThread: Identifiable, Codable, Sendable {
+    let id: String
+    let title: String
+    let preview: String
+    let updatedAt: Date
+    let provider: String
+    let busy: Bool
+    var path: String?
+    var cwd: String?
+    init(_ value: [String: Any]) throws {
+        guard let id = value["id"] as? String, UUID(uuidString: id) != nil else { throw WorkshopError.invalid("Codex 会话标识无效。") }
+        self.id = id
+        preview = String((value["preview"] as? String ?? "").prefix(200))
+        let name = (value["name"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        title = name.isEmpty ? String(preview.prefix(60)) : String(name.prefix(120))
+        updatedAt = Date(timeIntervalSince1970: (value["updatedAt"] as? Double) ?? 0)
+        provider = value["modelProvider"] as? String ?? "openai"
+        busy = (value["status"] as? [String: Any])?["type"] as? String == "active"
+        path = value["path"] as? String
+        cwd = value["cwd"] as? String
+    }
+}
+struct WorkshopCodexMessage: Identifiable, Sendable {
+    let id: String
+    let role: String
+    let text: String
+    let images: Int
+    var context: WorkshopConversationContext? = nil
+    var sources: [WorkshopContextSource] = []
+    var kind: String? = nil
+    var details: String? = nil
+    var imagePaths: [String] = []
+}
+struct WorkshopCodexHistory: Sendable {
+    let messages: [WorkshopCodexMessage]
+    let nextCursor: String?
+    var latestTurnID: String? = nil
+    var latestTurnStatus: String? = nil
+}
+struct WorkshopCodexThreadPage: Sendable {
+    let threads: [WorkshopCodexThread]
+    let nextCursor: String?
 }

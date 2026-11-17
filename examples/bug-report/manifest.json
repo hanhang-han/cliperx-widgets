@@ -1,0 +1,53 @@
+{
+  "id": "com.cliperx.bug-report",
+  "name": "Bug 单整理",
+  "version": "0.1.0",
+  "apiVersion": 4,
+  "author": "CliperX",
+  "description": "选择复制的报错、日志和截图，用本机 Codex 生成带证据来源的 Bug 单。",
+  "license": "MIT",
+  "symbol": "ladybug",
+  "sizes": [
+    "small"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "network": [],
+    "openURL": false,
+    "clipboardWrite": false,
+    "systemMetrics": false,
+    "contextPreparation": true
+  },
+  "settings": [],
+  "presentation": {
+    "card": "standard",
+    "workspace": "context"
+  },
+  "task": {
+    "input": {
+      "types": [
+        "text",
+        "image"
+      ],
+      "minItems": 1,
+      "maxItems": 12
+    },
+    "parameters": [
+      {
+        "key": "product",
+        "title": "产品名称",
+        "default": "",
+        "required": true
+      },
+      {
+        "key": "severity",
+        "title": "影响程度",
+        "default": "根据证据判断，信息不足时标记待确认"
+      }
+    ],
+    "prompt": "你负责整理 {{parameters.product}} 的 Bug 单。根据本次提供的材料输出 Markdown，包含标题、环境、现象、复现步骤、预期结果、实际结果、影响程度、证据与待确认信息。影响程度要求 {{parameters.severity}}。每个有证据的结论保留原始来源编号，引用图片时使用图片来源标识。缺少的信息标记待确认，事实与推断明确区分。用户补充要求 {{question}}",
+    "output": {
+      "format": "markdown"
+    }
+  }
+}

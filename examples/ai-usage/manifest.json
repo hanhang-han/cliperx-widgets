@@ -1,7 +1,7 @@
 {
   "id": "com.cliperx.ai-usage",
   "name": "AI 用量",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "apiVersion": 2,
   "author": "CliperX",
   "description": "通过本机 CodexBar 查看 Codex 或 Claude 用量、额度窗口和重置时间。",

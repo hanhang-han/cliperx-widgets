@@ -1,0 +1,23 @@
+{
+  "id": "com.cliperx.disk",
+  "name": "磁盘",
+  "version": "1.0.0",
+  "apiVersion": 3,
+  "author": "CliperX",
+  "description": "磁盘读取、写入速率",
+  "license": "MIT",
+  "symbol": "internaldrive",
+  "sizes": [
+    "small",
+    "wide"
+  ],
+  "refreshSeconds": 30,
+  "permissions": {
+    "systemMetrics": true
+  },
+  "presentation": {
+    "card": "metric",
+    "multipleInstances": false,
+    "metric": "disk"
+  }
+}

@@ -1,14 +1,13 @@
 {
   "id": "com.cliperx.context-preparation",
-  "name": "上下文准备",
-  "version": "0.1.0",
+  "name": "上下文",
+  "version": "0.3.1",
   "apiVersion": 2,
   "author": "CliperX",
-  "description": "准备 AI 上下文，选择剪贴板素材，保留来源并控制估算 token 预算。",
+  "description": "在灵动岛选择文字和图片，使用 Codex 新建或历史对话回答问题，可选灵剪只读 MCP。",
   "license": "MIT",
   "symbol": "doc.on.doc",
   "sizes": [
-    "wide",
     "small"
   ],
   "refreshSeconds": 30,
